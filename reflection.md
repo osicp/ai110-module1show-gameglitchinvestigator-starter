@@ -42,11 +42,12 @@ In app.py line 108 the intented FIXME comment should've been: FIXME: st. subhead
 
 - How did you decide whether a bug was really fixed?
 Once I found the bugs, I prompted Claude to create a test and eval suite based on my findings. When I ran the tests and evals it failed as predicted. Then I corrected the bugs manually and all tests and evals passed. 
-- Describe at least one test you ran (manual or using pytest)  
-  and what it showed you about your code.
+
+- Describe at least one test you ran (manual or using pytest) and what it showed you about your code.
+I tested the app for inputs out of range using pytest. The test failed showing the code still accepted the input. Once the bug was fixed manually, the test passed assuring bug was indeed fixed.
 
 - Did AI help you design or understand any tests? How?
-
+Yes, I used Claude to create an architecture.md to then use the same as a reference to build a test suite. Copilot helped me fix the bugs manually.
 ---
 
 ## 4. What did you learn about Streamlit and state?

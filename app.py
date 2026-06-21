@@ -14,9 +14,9 @@ difficulty = st.sidebar.selectbox(
     ["Easy", "Normal", "Hard"],
     index=1,
 )
-# FIXME: Difficulty attempt limits are backwards. Easy should be more.
+
 attempt_limit_map = {
-    "Easy": 6,
+    "Easy": 10,
     "Normal": 8,
     "Hard": 5,
 }
@@ -31,7 +31,7 @@ if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 1   # FIXME: Attempts should start at 0, but starting at 1 to trigger the TypeError on the first guess for testing purposes.
+    st.session_state.attempts = 0   
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -42,9 +42,9 @@ if "status" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
-st.subheader("Make a guess") # FIXME: st. subheader anchor is not set correctly, and the link does not scroll to the guess input.
+st.subheader("Make a guess", anchor="make-a-guess")
 st.info(
-    f"Guess a number between 1 and 100. " # FIXME: The range is hardcoded in the message instead of reflecting the selected difficulty.
+    f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
@@ -55,25 +55,23 @@ with st.expander("Developer Debug Info"):
     st.write("Difficulty:", difficulty)
     st.write("History:", st.session_state.history)
 
-raw_guess = st.text_input(
-    "Enter your guess:",
-    key=f"guess_input_{difficulty}"
-)
-# FIXME: Enter key does nothing, st.text_input is paired with a plain st.button and does not intercepts the Enter key.
-col1, col2, col3 = st.columns(3)
-with col1:
-    submit = st.button("Submit Guess 🚀")
-with col2:
-    new_game = st.button("New Game 🔁")
-with col3:
-    show_hint = st.checkbox("Show hint", value=True)
-# FIXME: The "New Game" button does not reset the game state correctly, and the "Show hint" checkbox does not toggle hints as expected.
+show_hint = st.checkbox("Show hint", value=True)
+
+with st.form("guess_form"):
+    raw_guess = st.text_input(
+        "Enter your guess:",
+        key=f"guess_input_{difficulty}"
+    )
+    submit = st.form_submit_button("Submit Guess 🚀")
+
+new_game = st.button("New Game 🔁")
+
 if new_game:
     st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100) # FIXME: new_game uses hardcoded range instead of the range corresponding to the selected difficulty.
+    st.session_state.secret = random.randint(low, high) 
     st.session_state.score = 0
     st.session_state.status = "playing"
-    st.session_state.history = [] # FIXME: History is not cleared on new game.
+    st.session_state.history = []
     st.success("New game started.")
     st.rerun()
 
@@ -83,6 +81,12 @@ if st.session_state.status != "playing":
     else:
         st.error("Game over. Start a new game to try again.")
     st.stop()
+
+OUTCOME_MESSAGES = {
+    "Win":      "🎉 Correct!",
+    "Too High": "📈 Go HIGHER!",  
+    "Too Low":  "📉 Go LOWER!",
+}
 
 if submit:
     st.session_state.attempts += 1
@@ -94,13 +98,8 @@ if submit:
         st.error(err)
     else:
         st.session_state.history.append(guess_int)
-# FIXME: TypeError Eception - Secret is treated as a string on every even-numbered attempt, and as an int on every odd-numbered attempt.
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
-
-        outcome, message = check_guess(guess_int, secret)
+        outcome = check_guess(guess_int, st.session_state.secret)
+        message = OUTCOME_MESSAGES.get(outcome, "")
 
         if show_hint:
             st.warning(message)

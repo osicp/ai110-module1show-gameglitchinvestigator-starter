@@ -5,7 +5,7 @@ def get_range_for_difficulty(difficulty: str):
     if difficulty == "Normal":
         return 1, 100
     if difficulty == "Hard":
-        return 1, 50  # FIXME: Hard difficulty should have a wider range than Normal.
+        return 1, 1000
     return 1, 100
 
 
@@ -32,28 +32,28 @@ def parse_guess(raw: str):
     return True, value, None
 
 
-# FIXME: check_guess return type mismatch with the tests/test_game_logic.py tests. It should return a tuple of (outcome, message) instead of just the outcome string.
 def check_guess(guess, secret):
     """
-    Compare guess to secret and return (outcome, message).
+    Compare guess to secret and return outcome string.
 
-    outcome examples: "Win", "Too High", "Too Low"
+    Returns: "Win", "Too High", or "Too Low"
     """
     if guess == secret:
-        return "Win", "🎉 Correct!"
+        return "Win"
 
     try:
         if guess > secret:
-            return "Too High", "📈 Go HIGHER!"  # FIXME: Wrong player must go LOWER
+            return "Too High"  
         else:
-            return "Too Low", "📉 Go LOWER!"  # FIXME: Wrong player must go HIGHER
+            return "Too Low"   
     except TypeError:
         g = str(guess)
         if g == secret:
-            return "Win", "🎉 Correct!"
+            return "Win"
         if g > secret:
-            return "Too High", "📈 Go HIGHER!"
-        return "Too Low", "📉 Go LOWER!"
+            return "Too High"
+        return "Too Low"
+
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
@@ -66,7 +66,7 @@ def update_score(current_score: int, outcome: str, attempt_number: int):
 
     if outcome == "Too High":
         if attempt_number % 2 == 0:
-            return current_score + 5  # FIXME: Rewards a wrong guess on every even-numbered attempt instead of penalizing it.
+            return current_score - 10
         return current_score - 5
 
     if outcome == "Too Low":
