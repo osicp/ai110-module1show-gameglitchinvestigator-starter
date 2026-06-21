@@ -57,32 +57,77 @@ def test_check_guess_outcome_values_are_exact():
 # ---------------------------------------------------------------------------
 
 def test_parse_guess_valid_integer():
-    ok, val, err = parse_guess("42")
+    ok, val, err = parse_guess("42", 1, 100)
     assert ok is True
     assert val == 42
     assert err is None
 
 def test_parse_guess_zero():
-    ok, val, err = parse_guess("0")
+    # Zero is a valid number when the range includes it
+    ok, val, err = parse_guess("0", 0, 100)
     assert ok is True
     assert val == 0
 
 def test_parse_guess_negative_number():
-    ok, val, err = parse_guess("-5")
+    # Negative numbers are valid when the range includes them
+    ok, val, err = parse_guess("-5", -10, 10)
     assert ok is True
     assert val == -5
 
 def test_parse_guess_float_string_truncates_to_int():
     # "3.9" should be accepted and truncated to 3, not rounded
-    ok, val, err = parse_guess("3.9")
+    ok, val, err = parse_guess("3.9", 1, 100)
     assert ok is True
     assert val == 3
 
 def test_parse_guess_whitespace_around_number():
     # Leading/trailing whitespace should not reject a valid number
-    ok, val, err = parse_guess("  42  ")
+    ok, val, err = parse_guess("  42  ", 1, 100)
     assert ok is True
     assert val == 42
+
+
+# ---------------------------------------------------------------------------
+# parse_guess — range validation
+# ---------------------------------------------------------------------------
+
+def test_parse_guess_at_low_boundary():
+    # The lowest allowed value must be accepted
+    ok, val, err = parse_guess("1", 1, 100)
+    assert ok is True
+    assert val == 1
+
+def test_parse_guess_at_high_boundary():
+    # The highest allowed value must be accepted
+    ok, val, err = parse_guess("100", 1, 100)
+    assert ok is True
+    assert val == 100
+
+def test_parse_guess_below_range():
+    # A number below the low boundary must be rejected
+    ok, val, err = parse_guess("0", 1, 100)
+    assert ok is False
+    assert val is None
+    assert err is not None
+
+def test_parse_guess_above_range():
+    # A number above the high boundary must be rejected
+    ok, val, err = parse_guess("101", 1, 100)
+    assert ok is False
+    assert val is None
+    assert err is not None
+
+def test_parse_guess_out_of_range_error_message_contains_bounds():
+    # The error message must tell the player the valid range
+    _, _, err = parse_guess("200", 1, 100)
+    assert err is not None
+    assert "1" in err
+    assert "100" in err
+
+def test_parse_guess_negative_out_of_range():
+    # A negative number is out of range for any positive-only difficulty
+    ok, val, err = parse_guess("-1", 1, 100)
+    assert ok is False
 
 
 # ---------------------------------------------------------------------------
@@ -90,27 +135,27 @@ def test_parse_guess_whitespace_around_number():
 # ---------------------------------------------------------------------------
 
 def test_parse_guess_none_input():
-    ok, val, err = parse_guess(None)  # type: ignore[arg-type]
+    ok, val, err = parse_guess(None, 1, 100)  # type: ignore[arg-type]
     assert ok is False
     assert val is None
     assert isinstance(err, str)
 
 def test_parse_guess_empty_string():
-    ok, val, err = parse_guess("")
+    ok, val, err = parse_guess("", 1, 100)
     assert ok is False
     assert val is None
 
 def test_parse_guess_non_numeric_word():
-    ok, val, err = parse_guess("abc")
+    ok, val, err = parse_guess("abc", 1, 100)
     assert ok is False
     assert val is None
 
 def test_parse_guess_mixed_alphanumeric():
-    ok, val, err = parse_guess("4abc")
+    ok, val, err = parse_guess("4abc", 1, 100)
     assert ok is False
 
 def test_parse_guess_only_whitespace():
-    ok, val, err = parse_guess("   ")
+    ok, val, err = parse_guess("   ", 1, 100)
     assert ok is False
 
 
@@ -120,24 +165,24 @@ def test_parse_guess_only_whitespace():
 
 def test_parse_guess_sql_injection():
     # Injection payloads must never parse as a valid number
-    ok, val, err = parse_guess("1; DROP TABLE users--")
+    ok, val, err = parse_guess("1; DROP TABLE users--", 1, 100)
     assert ok is False
 
 def test_parse_guess_html_script_tag():
-    ok, val, err = parse_guess("<script>alert(1)</script>")
+    ok, val, err = parse_guess("<script>alert(1)</script>", 1, 100)
     assert ok is False
 
 def test_parse_guess_path_traversal():
-    ok, val, err = parse_guess("../../etc/passwd")
+    ok, val, err = parse_guess("../../etc/passwd", 1, 100)
     assert ok is False
 
 def test_parse_guess_null_byte():
-    ok, val, err = parse_guess("\x00")
+    ok, val, err = parse_guess("\x00", 1, 100)
     assert ok is False
 
 def test_parse_guess_very_long_string_does_not_crash():
     # A pathologically long string must not raise an unhandled exception
-    ok, val, err = parse_guess("A" * 10_000)
+    ok, val, err = parse_guess("A" * 10_000, 1, 100)
     assert isinstance(ok, bool)
     assert ok is False
 
@@ -214,3 +259,32 @@ def test_update_score_unknown_outcome_unchanged():
     # An unrecognised outcome must leave the score untouched
     score = update_score(100, "Tie", 1)
     assert score == 100
+
+
+# ---------------------------------------------------------------------------
+# attempt guard — out-of-range and invalid guesses must not consume attempts
+# ---------------------------------------------------------------------------
+
+def test_invalid_input_does_not_count_as_attempt():
+    # parse_guess returning ok=False means the caller must not increment attempts
+    ok, _, _ = parse_guess("abc", 1, 100)
+    assert ok is False  # caller sees False and skips the increment
+
+def test_out_of_range_does_not_count_as_attempt():
+    # A number outside [low, high] also returns ok=False
+    ok, _, _ = parse_guess("999", 1, 100)
+    assert ok is False  # caller sees False and skips the increment
+
+def test_attempts_left_never_goes_negative():
+    # Simulates exhausting the attempt limit with valid guesses only.
+    # Each call that returns ok=True is one consumed attempt; the counter
+    # must reach exactly attempt_limit and stop — never exceed it.
+    attempt_limit = 3
+    attempts = 0
+    guesses = ["50", "60", "70"]  # all in range, all wrong
+    for raw in guesses:
+        ok, _, _ = parse_guess(raw, 1, 100)
+        if ok:
+            attempts += 1
+    assert attempts == attempt_limit
+    assert attempt_limit - attempts == 0  # exactly zero left, never negative

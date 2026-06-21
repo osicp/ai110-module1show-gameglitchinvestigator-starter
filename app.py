@@ -84,19 +84,17 @@ if st.session_state.status != "playing":
 
 OUTCOME_MESSAGES = {
     "Win":      "🎉 Correct!",
-    "Too High": "📈 Go HIGHER!",  
-    "Too Low":  "📉 Go LOWER!",
+    "Too High": "📉 Go LOWER!",  
+    "Too Low":  "📈 Go HIGHER!",
 }
 
 if submit:
-    st.session_state.attempts += 1
-
-    ok, guess_int, err = parse_guess(raw_guess)
+    ok, guess_int, err = parse_guess(raw_guess, low, high)
 
     if not ok:
-        st.session_state.history.append(raw_guess)
         st.error(err)
     else:
+        st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
         outcome = check_guess(guess_int, st.session_state.secret)
         message = OUTCOME_MESSAGES.get(outcome, "")
