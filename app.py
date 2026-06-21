@@ -96,6 +96,7 @@ if submit:
     else:
         st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
+        assert guess_int is not None
         outcome = check_guess(guess_int, st.session_state.secret)
         message = OUTCOME_MESSAGES.get(outcome, "")
 
