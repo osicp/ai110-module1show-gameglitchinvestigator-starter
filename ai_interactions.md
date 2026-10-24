@@ -10,7 +10,7 @@
 
 **What task did you give the agent?**
 
-write PEP 8 compliant docstrings for logic_utils.py and review for style issues
+Write PEP 8 compliant docstrings for logic_utils.py and review for style issues
 
 **What did the agent do?**
 

@@ -32,7 +32,7 @@ The purpose of the game is to guess a number. Depending on the difficulty the ra
 1. When secret: 48
 When user presses enter or submit guess button, there is no reaction from the app
 2. Input 40, system message: GO LOWER!
-Input 50, system message: GO HIHER!
+Input 50, system message: GO HIGHER!
 3. Once user wins or loses , the new game button refreshes the attempts left but there is no response once user presses the submit button for the the new guess, nor by pressing enter.  
 4. Difficulty settings shows easy with 6 attempts and range 1 to 20, normal with 8 attempts and range 1 to 100, and hard with 5 attempts and range 1 to 50.
 5. There is a link next to Make a guess that is not working

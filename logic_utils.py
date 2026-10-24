@@ -99,7 +99,7 @@ def update_score(
         The updated integer score.
     """
     if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
+        points = 100 - 10 * attempt_number
         if points < 10:
             points = 10
         return current_score + points

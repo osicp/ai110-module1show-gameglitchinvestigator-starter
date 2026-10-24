@@ -82,5 +82,7 @@ classDiagram
 | A11 | app.py | line 9–10 | Hard range (1–50) is narrower than Normal (1–100) |
 | A12 | app.py | line 107 | st.subheader anchor not set explicitly |
 | A13 | app.py | line 57–60 | update_score adds points on even-attempt Too High guess |
+| A14 | app.py | line 34-36 | game state is not reset when difficulty is changed |
+| A15 | app.py | line 150-162 | if submit: logic continues executing after st.rerun() call|
 | L1 | logic_utils.py | line 1–27 | All four functions are unimplemented stubs (NotImplementedError) |
 | L2 | logic_utils.py | line 15–21 | check_guess returns tuple but tests expect plain string |

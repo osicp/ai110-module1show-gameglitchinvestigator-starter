@@ -29,7 +29,7 @@ Document at least 3 bugs you found. Add rows as needed.
 ## 2. How did you use AI as a teammate?
 
 - Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
-I used Claude as a macro AI debugger.I used Copilot for inline pre-filling.
+I used Claude as a macro AI debugger and Copilot for inline pre-filling.
 
 - Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
 When I was entering the FIXME comments, Copilot auto-fill feature kept pre filling information about the bug I had already found. I used this to expedite my work always verifying that aligns with my intentions. 
